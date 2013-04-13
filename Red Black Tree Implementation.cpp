@@ -423,7 +423,7 @@ void display_choice(){
 }
 
 // MAIN
-int main5() {
+int main() {
 	int ch=0;	// choice
 	// initializing tree
 	RB_Tree* tree=new RB_Tree();
