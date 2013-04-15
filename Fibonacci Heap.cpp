@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
@@ -8,229 +7,229 @@ using namespace std;
 /////////////////////////////////////////////////
 typedef struct {
     int key;
-} stHeapInfo;
+} HeapInfo;
 
-typedef struct stHeapNode{
-    stHeapNode *pParent;
-    stHeapNode *pLeft;
-    stHeapNode *pRight;
-    stHeapNode *ppChild[MAX_DEGREE];
-    int nchild;
-    int nDegree;
-    stHeapInfo hpInfo;
-} stHeapNode;
+typedef struct HeapNode{
+    HeapNode *Parent;
+    HeapNode *Left;
+    HeapNode *Right;
+    HeapNode *Child[MAX_DEGREE];
+    int child;
+    int Degree;
+    HeapInfo hpInfo;
+} HeapNode;
 
 class FibHeap
 {
 public:
     FibHeap();
     ~FibHeap();
-    void Insert(stHeapInfo hpInfo);
-    void ExtractMax(stHeapInfo* hpInfo);
+    void Insert(HeapInfo hpInfo);
+    void ExtractMax(HeapInfo* hpInfo);
     void DumpHeap();
     FibHeap UniteHeap(FibHeap F);
     
 private:
-    stHeapNode* m_pRootHeap;
-    stHeapNode* m_pMaxHeap;
+    HeapNode* RootHeap;
+    HeapNode* MaxHeap;
     
-    stHeapNode* m_fnNewNode(stHeapInfo hpInfo);
-    void m_fnAddToRootHeap(stHeapNode* pNode);
-    void m_fnConsolidate();
-    void m_fnAttachTree(stHeapNode* pFromNode,stHeapNode* pToNode);
-    void m_fnLevelUp(stHeapNode* pNode);
-    void m_fnRemoveNode(stHeapNode* pNode);
-    void m_fnAssignMinNode();           // find a minimum node
-    void m_fnDumpTree(stHeapNode* pNode);
-    void m_fnDeleteTree(stHeapNode* pNode);
+    HeapNode* NewNode(HeapInfo hpInfo);
+    void AddToRootHeap(HeapNode* pNode);
+    void Consolidate();
+    void AttachTree(HeapNode* pFromNode,HeapNode* pToNode);
+    void LevelUp(HeapNode* pNode);
+    void RemoveNode(HeapNode* pNode);
+    void AssignMinNode();           // find a minimum node
+    void DumpTree(HeapNode* pNode);
+    void DeleteTree(HeapNode* pNode);
     
 };
 
 FibHeap::FibHeap(){
-    m_pRootHeap = NULL;
-    m_pMaxHeap = NULL;
+    RootHeap = NULL;
+    MaxHeap = NULL;
 }
 
 FibHeap::~FibHeap(){
-    stHeapNode* pNode = m_pRootHeap;
-    while (pNode != NULL){
-            stHeapNode* pNextNode = pNode->pRight;
-            m_fnDeleteTree(pNode);
-            pNode = pNextNode;
+    HeapNode* Node = RootHeap;
+    while (Node != NULL){
+            HeapNode* pNextNode = Node->Right;
+            DeleteTree(Node);
+            Node = pNextNode;
     }
 }
 
-void FibHeap::Insert(stHeapInfo hpInfo){
-    stHeapNode* pNewNode = m_fnNewNode(hpInfo);
-    m_fnAddToRootHeap(pNewNode);
+void FibHeap::Insert(HeapInfo hpInfo){
+    HeapNode* newNode = NewNode(hpInfo);
+    AddToRootHeap(newNode);
 }
 
-void FibHeap::ExtractMax(stHeapInfo* hpInfo){
-    if(m_pMaxHeap==NULL)
+void FibHeap::ExtractMax(HeapInfo* hpInfo){
+    if(MaxHeap==NULL)
         return;
-    *hpInfo = m_pMaxHeap->hpInfo;
+    *hpInfo = MaxHeap->hpInfo;
     
     //Move children into root
-    m_fnLevelUp(m_pMaxHeap);
+    LevelUp(MaxHeap);
     
     //Remove the minimum node
-    m_fnRemoveNode(m_pMaxHeap);
-    m_pMaxHeap = NULL;
+    RemoveNode(MaxHeap);
+    MaxHeap = NULL;
     
     //Re-assign a new one for m_MinHeap
-    m_fnAssignMinNode();
+    AssignMinNode();
 
     //Consolidate the heap trees
-    m_fnConsolidate();
+    Consolidate();
 }
 
 void FibHeap::DumpHeap(){
-    stHeapNode* pNode = m_pRootHeap;
-    while(pNode != NULL){
+    HeapNode* Node = RootHeap;
+    while(Node != NULL){
         cout<<"--------------------\n";
-        if(pNode==m_pMaxHeap)
+        if(Node==MaxHeap)
             cout<<"*";
-        m_fnDumpTree(pNode);
-        pNode = pNode->pRight;
+        DumpTree(Node);
+        Node = Node->Right;
     }
 }
 
-void FibHeap::m_fnAssignMinNode(){
-    stHeapNode* pCheckNode = m_pRootHeap;
-    while( pCheckNode != NULL ){
-        if( m_pMaxHeap==NULL || m_pMaxHeap->hpInfo.key<pCheckNode->hpInfo.key )
-            m_pMaxHeap = pCheckNode;
-        pCheckNode = pCheckNode->pRight;
+void FibHeap::AssignMinNode(){
+    HeapNode* CheckNode = RootHeap;
+    while( CheckNode != NULL ){
+        if( MaxHeap==NULL || MaxHeap->hpInfo.key<CheckNode->hpInfo.key )
+            MaxHeap = CheckNode;
+        CheckNode = CheckNode->Right;
     }
 }
 
-void FibHeap::m_fnRemoveNode(stHeapNode* pNode){
-    if(pNode == NULL)
+void FibHeap::RemoveNode(HeapNode* Node){
+    if(Node == NULL)
         return;
     
-    if(pNode == m_pRootHeap)
-        m_pRootHeap = m_pRootHeap->pRight;
-    if(pNode->pLeft)
-        pNode->pLeft->pRight = pNode->pRight;
-    if(pNode->pRight)
-        pNode->pRight->pLeft = pNode->pLeft;
-    delete pNode;
+    if(Node == RootHeap)
+        RootHeap = RootHeap->Right;
+    if(Node->Left)
+        Node->Left->Right = Node->Right;
+    if(Node->Right)
+        Node->Right->Left = Node->Left;
+    delete Node;
 }
 
-void FibHeap::m_fnLevelUp(stHeapNode* pNode){
-    for(int i=0;i<pNode->nchild;i++){
-        stHeapNode* pChildNode = pNode->ppChild[i];
-        m_fnAddToRootHeap(pChildNode);
-        pChildNode->pParent = NULL;
-        pNode->ppChild[i] = NULL;
+void FibHeap::LevelUp(HeapNode* Node){
+    for(int i=0;i<Node->child;i++){
+        HeapNode* pChildNode = Node->Child[i];
+        AddToRootHeap(pChildNode);
+        pChildNode->Parent = NULL;
+        Node->Child[i] = NULL;
     }
-    pNode->nchild = 0;
+    Node->child = 0;
 }
 
-void FibHeap::m_fnAddToRootHeap(stHeapNode* pNode){
-    if(m_pRootHeap==NULL){
-        m_pRootHeap = pNode;
-        m_pMaxHeap = pNode;
+void FibHeap::AddToRootHeap(HeapNode* Node){
+    if(RootHeap==NULL){
+        RootHeap = Node;
+        MaxHeap = Node;
         return;
     }
     
-    pNode->pRight = m_pRootHeap;
-    m_pRootHeap->pLeft = pNode;
-    m_pRootHeap = pNode;
-    if( m_pMaxHeap->hpInfo.key < m_pRootHeap->hpInfo.key )
-        m_pMaxHeap = m_pRootHeap;
+    Node->Right = RootHeap;
+    RootHeap->Left = Node;
+    RootHeap = Node;
+    if( MaxHeap->hpInfo.key < RootHeap->hpInfo.key )
+        MaxHeap = RootHeap;
 }
 
-stHeapNode* FibHeap::m_fnNewNode(stHeapInfo hpInfo){
-    stHeapNode* pNode = new stHeapNode;
-    pNode->pLeft = NULL;
-    pNode->pRight = NULL;
-    pNode->pParent = NULL;
-    pNode->hpInfo = hpInfo;
-    pNode->nDegree = 0;
-    pNode->nchild = 0;
+HeapNode* FibHeap::NewNode(HeapInfo hpInfo){
+    HeapNode* Node = new HeapNode;
+    Node->Left = NULL;
+    Node->Right = NULL;
+    Node->Parent = NULL;
+    Node->hpInfo = hpInfo;
+    Node->Degree = 0;
+    Node->child = 0;
     
-    memset(pNode->ppChild,0,sizeof(pNode->ppChild));
+    memset(Node->Child,0,sizeof(Node->Child));
     
-    return pNode;
+    return Node;
 }
 
-void FibHeap::m_fnConsolidate(){
-    stHeapNode* ppDegreeNode[MAX_DEGREE];
-    stHeapNode* pNode = m_pRootHeap;
+void FibHeap::Consolidate(){
+    HeapNode* DegreeNode[MAX_DEGREE];
+    HeapNode* Node = RootHeap;
     
-    memset(ppDegreeNode,0,sizeof(ppDegreeNode));
-    while( pNode !=NULL ){
-        if( ppDegreeNode[pNode->nDegree]==NULL ){
-            ppDegreeNode[pNode->nDegree] = pNode;
-            pNode = pNode->pRight;
+    memset(DegreeNode,0,sizeof(DegreeNode));
+    while( Node !=NULL ){
+        if( DegreeNode[Node->Degree]==NULL ){
+            DegreeNode[Node->Degree] = Node;
+            Node = Node->Right;
         }
         else{
-            stHeapNode* pPreNode = ppDegreeNode[pNode->nDegree];
-            if (pPreNode->hpInfo.key < pNode->hpInfo.key)
-                m_fnAttachTree(pPreNode,pNode);
+            HeapNode* PreNode = DegreeNode[Node->Degree];
+            if (PreNode->hpInfo.key < Node->hpInfo.key)
+                AttachTree(PreNode,Node);
             else
-                m_fnAttachTree(pNode,pPreNode);
+                AttachTree(Node,PreNode);
             
             // Reset the search
-            memset(ppDegreeNode,0,sizeof(ppDegreeNode));
-            pNode = m_pRootHeap;
+            memset(DegreeNode,0,sizeof(DegreeNode));
+            Node = RootHeap;
         }
     }
     
 }
 
-void FibHeap::m_fnAttachTree(stHeapNode* pFromNode, stHeapNode* pToNode){
-    if( pFromNode==m_pRootHeap )
-        m_pRootHeap = m_pRootHeap->pRight;
+void FibHeap::AttachTree(HeapNode* FromNode, HeapNode* ToNode){
+    if( FromNode==RootHeap )
+        RootHeap = RootHeap->Right;
     
-    // Break the link of pFromNode
-    if(pFromNode->pLeft)
-        pFromNode->pLeft->pRight = pFromNode->pRight;
-    if (pFromNode->pRight)
-        pFromNode->pRight->pLeft = pFromNode->pLeft;
-    pFromNode->pLeft = NULL;
-    pFromNode->pRight = NULL;
+    // Break the link of FromNode
+    if(FromNode->Left)
+        FromNode->Left->Right = FromNode->Right;
+    if (FromNode->Right)
+        FromNode->Right->Left = FromNode->Left;
+    FromNode->Left = NULL;
+    FromNode->Right = NULL;
 
-    // Move the pFromNode under the pToNode
-    pToNode->ppChild[pToNode->nchild] = pFromNode;
-    pToNode->nchild++;
-    pToNode->nDegree++;
-    pFromNode->pParent = pToNode;
+    // Move the FromNode under the ToNode
+    ToNode->Child[ToNode->child] = FromNode;
+    ToNode->child++;
+    ToNode->Degree++;
+    FromNode->Parent = ToNode;
     
     return;
 }
 
-void FibHeap::m_fnDumpTree(stHeapNode* pNode){
-    cout<<pNode->hpInfo.key<<endl;
-    for(int i=0;i<pNode->nchild;i++){
-        stHeapNode* pChildNode = pNode->ppChild[i];
+void FibHeap::DumpTree(HeapNode* Node){
+    cout<<Node->hpInfo.key<<endl;
+    for(int i=0;i<Node->child;i++){
+        HeapNode* pChildNode = Node->Child[i];
         cout<<pChildNode->hpInfo.key<<endl;
     }
     cout<<endl;
-    for(int i=0;i<pNode->nchild;i++){
-        stHeapNode* pChildNode = pNode->ppChild[i];
-        m_fnDumpTree(pChildNode);
+    for(int i=0;i<Node->child;i++){
+        HeapNode* pChildNode = Node->Child[i];
+        DumpTree(pChildNode);
     }
 }
 
-void FibHeap::m_fnDeleteTree(stHeapNode* pNode){
-    if(pNode==NULL)
+void FibHeap::DeleteTree(HeapNode* Node){
+    if(Node==NULL)
         return;
     
-    for(int i=0;i<pNode->nchild;i++){
-        stHeapNode* pChildNode = pNode->ppChild[i];
-        m_fnDeleteTree(pChildNode);
+    for(int i=0;i<Node->child;i++){
+        HeapNode* pChildNode = Node->Child[i];
+        DeleteTree(pChildNode);
     }
     
-    delete pNode;
+    delete Node;
 }
 
 FibHeap FibHeap::UniteHeap(FibHeap F){
     FibHeap H;
-    stHeapNode* pMax = m_pMaxHeap;
-    H.m_pMaxHeap = pMax;
-    H.m_pRootHeap = m_pRootHeap;
+    HeapNode* pMax = MaxHeap;
+    H.MaxHeap = pMax;
+    H.RootHeap = RootHeap;
     
 }
 
@@ -242,7 +241,7 @@ void test1()
 {
         printf("[Test1] \n");
         FibHeap fiboHeap;
-        stHeapInfo heapInfo;
+        HeapInfo heapInfo;
 
         heapInfo.key = 1;
         fiboHeap.Insert(heapInfo);
@@ -296,7 +295,7 @@ void test2()
 {
         printf("[Test2] \n");
         FibHeap fiboHeap;
-        stHeapInfo heapInfo;
+        HeapInfo heapInfo;
         int maxTest = 10;
 
         srand(0);
