@@ -1,6 +1,6 @@
 /* 
  * File:   FibHeap.h
- * Author: chandanakiti
+ * Author: Chandan Akiti
  *
  * Created on 15 April 2013, 3:59 AM
  */
